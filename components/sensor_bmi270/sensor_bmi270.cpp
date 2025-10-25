@@ -6,28 +6,46 @@ namespace sensor_bmi270 {
 
 static const char *const TAG = "sensor_bmi270";
 
-// Registres de base
-static const uint8_t BMI270_REG_CHIP_ID = 0x00;
-static const uint8_t BMI270_REG_ACCEL_X_LSB = 0x0C;
-static const uint8_t BMI270_CHIP_ID = 0x24;
+// Registres BMI270
+static const uint8_t BMI270_REG_CHIP_ID   = 0x00;
+static const uint8_t BMI270_REG_CMD       = 0x7E;   // Command register
+static const uint8_t BMI270_CMD_SOFTRESET = 0xB6;   // Soft reset
+static const uint8_t BMI270_CHIP_ID       = 0x24;
+
+// Bloc de données : accel x/y/z (6 octets) + gyro x/y/z (6 octets)
+static const uint8_t BMI270_REG_DATA      = 0x0C;
+static const uint8_t BMI270_DATA_LEN      = 12;
 
 void BMI270Sensor::setup() {
   ESP_LOGCONFIG(TAG, "Initialisation du BMI270...");
 
-  uint8_t id = 0;
+  // Laisser le capteur s'alimenter
+  delay(5);
+
+  // Soft reset recommandé par Bosch
+  uint8_t cmd = BMI270_CMD_SOFTRESET;
+  if (!this->write_register(BMI270_REG_CMD, &cmd, 1)) {
+    ESP_LOGW(TAG, "Impossible d'envoyer le soft-reset (CMD 0x%02X)", BMI270_REG_CMD);
+  }
+  delay(10);
+
+  // Lecture Chip-ID
+  uint8_t id = 0x00;
   if (!this->read_register(BMI270_REG_CHIP_ID, &id, 1)) {
-    ESP_LOGE(TAG, "Échec lecture ID du capteur !");
+    ESP_LOGE(TAG, "Échec lecture ID du capteur (addr I2C 0x%02X)", this->address_);
     this->mark_failed();
     return;
   }
+  ESP_LOGD(TAG, "Chip-ID lu: 0x%02X", id);
 
   if (id != BMI270_CHIP_ID) {
-    ESP_LOGE(TAG, "ID inattendu 0x%02X (attendu 0x%02X)", id, BMI270_CHIP_ID);
+    ESP_LOGE(TAG, "ID inattendu 0x%02X (attendu 0x%02X) à l'adresse 0x%02X",
+             id, BMI270_CHIP_ID, this->address_);
     this->mark_failed();
     return;
   }
 
-  ESP_LOGI(TAG, "BMI270 détecté à 0x%02X", this->address_);
+  ESP_LOGI(TAG, "BMI270 détecté à l’adresse 0x%02X", this->address_);
 }
 
 void BMI270Sensor::dump_config() {
@@ -40,43 +58,47 @@ void BMI270Sensor::dump_config() {
 
 void BMI270Sensor::update() {
   if (!this->read_raw_data()) {
-    ESP_LOGW(TAG, "Échec de lecture BMI270");
+    ESP_LOGW(TAG, "Échec de lecture des données BMI270");
     return;
   }
 
+  // Échelles approximatives (à ajuster selon config ODR/range si besoin)
   constexpr float accel_scale = 9.80665f / 16384.0f;  // ±2g
-  constexpr float gyro_scale = 1.0f / 131.0f;         // ±250°/s
+  constexpr float gyro_scale  = 1.0f / 131.0f;        // ±250°/s
 
   if (accel_x_ != nullptr) accel_x_->publish_state(raw_ax_ * accel_scale);
   if (accel_y_ != nullptr) accel_y_->publish_state(raw_ay_ * accel_scale);
   if (accel_z_ != nullptr) accel_z_->publish_state(raw_az_ * accel_scale);
 
-  if (gyro_x_ != nullptr) gyro_x_->publish_state(raw_gx_ * gyro_scale);
-  if (gyro_y_ != nullptr) gyro_y_->publish_state(raw_gy_ * gyro_scale);
-  if (gyro_z_ != nullptr) gyro_z_->publish_state(raw_gz_ * gyro_scale);
+  if (gyro_x_ != nullptr)  gyro_x_->publish_state(raw_gx_ * gyro_scale);
+  if (gyro_y_ != nullptr)  gyro_y_->publish_state(raw_gy_ * gyro_scale);
+  if (gyro_z_ != nullptr)  gyro_z_->publish_state(raw_gz_ * gyro_scale);
 }
 
 bool BMI270Sensor::read_raw_data() {
-  uint8_t buffer[12];
-  if (!this->read_register(BMI270_REG_ACCEL_X_LSB, buffer, sizeof(buffer))) {
-    ESP_LOGE(TAG, "Erreur I2C lecture données BMI270");
+  uint8_t buf[BMI270_DATA_LEN] = {0};
+
+  if (!this->read_register(BMI270_REG_DATA, buf, BMI270_DATA_LEN)) {
+    ESP_LOGE(TAG, "Erreur I2C lors de la lecture des 12 octets de données");
     return false;
   }
 
-  raw_ax_ = (int16_t)((buffer[1] << 8) | buffer[0]);
-  raw_ay_ = (int16_t)((buffer[3] << 8) | buffer[2]);
-  raw_az_ = (int16_t)((buffer[5] << 8) | buffer[4]);
-  raw_gx_ = (int16_t)((buffer[7] << 8) | buffer[6]);
-  raw_gy_ = (int16_t)((buffer[9] << 8) | buffer[8]);
-  raw_gz_ = (int16_t)((buffer[11] << 8) | buffer[10]);
+  raw_ax_ = (int16_t)((buf[1]  << 8) | buf[0]);
+  raw_ay_ = (int16_t)((buf[3]  << 8) | buf[2]);
+  raw_az_ = (int16_t)((buf[5]  << 8) | buf[4]);
+  raw_gx_ = (int16_t)((buf[7]  << 8) | buf[6]);
+  raw_gy_ = (int16_t)((buf[9]  << 8) | buf[8]);
+  raw_gz_ = (int16_t)((buf[11] << 8) | buf[10]);
 
   ESP_LOGV(TAG, "RAW AX:%d AY:%d AZ:%d GX:%d GY:%d GZ:%d",
            raw_ax_, raw_ay_, raw_az_, raw_gx_, raw_gy_, raw_gz_);
+
   return true;
 }
 
 }  // namespace sensor_bmi270
 }  // namespace esphome
+
 
 
 
