@@ -6,7 +6,7 @@ namespace sensor_bmi270 {
 
 static const char *const TAG = "sensor_bmi270";
 
-// Registres simplifiés pour test
+// Registres de base
 static const uint8_t BMI270_REG_CHIP_ID = 0x00;
 static const uint8_t BMI270_REG_ACCEL_X_LSB = 0x0C;
 static const uint8_t BMI270_CHIP_ID = 0x24;
@@ -44,8 +44,8 @@ void BMI270Sensor::update() {
     return;
   }
 
-  constexpr float accel_scale = 9.80665f / 16384.0f;
-  constexpr float gyro_scale = 1.0f / 131.0f;
+  constexpr float accel_scale = 9.80665f / 16384.0f;  // ±2g
+  constexpr float gyro_scale = 1.0f / 131.0f;         // ±250°/s
 
   if (accel_x_ != nullptr) accel_x_->publish_state(raw_ax_ * accel_scale);
   if (accel_y_ != nullptr) accel_y_->publish_state(raw_ay_ * accel_scale);
@@ -77,5 +77,6 @@ bool BMI270Sensor::read_raw_data() {
 
 }  // namespace sensor_bmi270
 }  // namespace esphome
+
 
 
