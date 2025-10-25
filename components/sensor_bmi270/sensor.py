@@ -6,7 +6,7 @@ from . import BMI270Sensor  # import depuis __init__.py
 DEPENDENCIES = ["i2c"]
 AUTO_LOAD = ["sensor"]
 
-# Schéma de configuration pour le platform 'sensor'
+# Schéma de configuration du platform 'sensor'
 CONFIG_SCHEMA = (
     cv.Schema(
         {
@@ -16,37 +16,37 @@ CONFIG_SCHEMA = (
             cv.Optional("accel_x"): sensor.sensor_schema(
                 unit_of_measurement="m/s²",
                 accuracy_decimals=3,
-                device_class="acceleration",
+                device_class="speed",  # anciennement acceleration
                 state_class="measurement",
             ),
             cv.Optional("accel_y"): sensor.sensor_schema(
                 unit_of_measurement="m/s²",
                 accuracy_decimals=3,
-                device_class="acceleration",
+                device_class="speed",
                 state_class="measurement",
             ),
             cv.Optional("accel_z"): sensor.sensor_schema(
                 unit_of_measurement="m/s²",
                 accuracy_decimals=3,
-                device_class="acceleration",
+                device_class="speed",
                 state_class="measurement",
             ),
             cv.Optional("gyro_x"): sensor.sensor_schema(
                 unit_of_measurement="°/s",
                 accuracy_decimals=2,
-                device_class="angular_velocity",
+                device_class="rotation_speed",  # anciennement angular_velocity
                 state_class="measurement",
             ),
             cv.Optional("gyro_y"): sensor.sensor_schema(
                 unit_of_measurement="°/s",
                 accuracy_decimals=2,
-                device_class="angular_velocity",
+                device_class="rotation_speed",
                 state_class="measurement",
             ),
             cv.Optional("gyro_z"): sensor.sensor_schema(
                 unit_of_measurement="°/s",
                 accuracy_decimals=2,
-                device_class="angular_velocity",
+                device_class="rotation_speed",
                 state_class="measurement",
             ),
         }
@@ -62,8 +62,9 @@ async def to_code(config):
 
     cg.add(var.set_address(config["address"]))
 
-    # Attache les sous-capteurs si fournis
+    # Crée et lie les sous-capteurs si présents
     for name in ["accel_x", "accel_y", "accel_z", "gyro_x", "gyro_y", "gyro_z"]:
         if name in config:
-            s = await sensor.new_sensor(config[name])
-            cg.add(getattr(var, f"set_{name}_sensor")(s))
+            sens = await sensor.new_sensor(config[name])
+            cg.add(getattr(var, f"set_{name}_sensor")(sens))
+
