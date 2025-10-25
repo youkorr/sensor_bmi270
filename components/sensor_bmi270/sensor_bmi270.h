@@ -16,7 +16,7 @@ class BMI270Sensor : public PollingComponent, public i2c::I2CDevice {
   void update() override;
   float get_setup_priority() const override { return setup_priority::DATA; }
 
-  // Setters
+  // Setters pour sous-capteurs
   void set_accel_x_sensor(sensor::Sensor *s) { accel_x_ = s; }
   void set_accel_y_sensor(sensor::Sensor *s) { accel_y_ = s; }
   void set_accel_z_sensor(sensor::Sensor *s) { accel_z_ = s; }
@@ -24,12 +24,9 @@ class BMI270Sensor : public PollingComponent, public i2c::I2CDevice {
   void set_gyro_y_sensor(sensor::Sensor *s) { gyro_y_ = s; }
   void set_gyro_z_sensor(sensor::Sensor *s) { gyro_z_ = s; }
 
-  void set_address(uint8_t addr) { this->address_ = addr; }
-
  protected:
   bool read_raw_data();
 
-  uint8_t address_{0x68};
   sensor::Sensor *accel_x_{nullptr};
   sensor::Sensor *accel_y_{nullptr};
   sensor::Sensor *accel_z_{nullptr};
@@ -43,5 +40,6 @@ class BMI270Sensor : public PollingComponent, public i2c::I2CDevice {
 
 }  // namespace sensor_bmi270
 }  // namespace esphome
+
 
 
