@@ -4,7 +4,6 @@ from esphome.components import sensor, i2c
 
 DEPENDENCIES = ["i2c"]
 AUTO_LOAD = ["sensor"]
-CODEOWNERS = ["@youkorr"]
 
 sensor_bmi270_ns = cg.esphome_ns.namespace("sensor_bmi270")
 BMI270Sensor = sensor_bmi270_ns.class_(
@@ -72,4 +71,5 @@ async def to_code(config):
         if name in config:
             sens = await sensor.new_sensor(config[name])
             cg.add(getattr(var, f"set_{name}_sensor")(sens))
+
 
