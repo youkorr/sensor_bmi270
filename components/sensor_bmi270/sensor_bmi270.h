@@ -44,3 +44,4 @@ class BMI270Sensor : public PollingComponent, public i2c::I2CDevice {
 }  // namespace sensor_bmi270
 }  // namespace esphome
 
+
