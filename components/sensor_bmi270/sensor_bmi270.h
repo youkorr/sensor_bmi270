@@ -16,7 +16,7 @@ class BMI270Sensor : public PollingComponent, public i2c::I2CDevice {
   void update() override;
   float get_setup_priority() const override { return setup_priority::DATA; }
 
-  // Setters pour les capteurs enfants
+  // Setters
   void set_accel_x_sensor(sensor::Sensor *s) { accel_x_ = s; }
   void set_accel_y_sensor(sensor::Sensor *s) { accel_y_ = s; }
   void set_accel_z_sensor(sensor::Sensor *s) { accel_z_ = s; }
