@@ -1,7 +1,7 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.components import i2c, sensor
-from . import BMI270Sensor  # import depuis __init__.py
+from . import BMI270Sensor
 
 DEPENDENCIES = ["i2c"]
 AUTO_LOAD = ["sensor"]
@@ -10,7 +10,7 @@ CONFIG_SCHEMA = (
     cv.Schema(
         {
             cv.GenerateID(): cv.declare_id(BMI270Sensor),
-            cv.Optional("address", default=0x68): cv.hex_uint8_t,
+            # L'adresse est fournie par i2c_device_schema; pas besoin de champ custom ici
             cv.Optional("update_interval", default="60s"): cv.update_interval,
             cv.Optional("accel_x"): sensor.sensor_schema(
                 unit_of_measurement="m/s²",
@@ -51,7 +51,7 @@ CONFIG_SCHEMA = (
         }
     )
     .extend(cv.COMPONENT_SCHEMA)
-    .extend(i2c.i2c_device_schema(0x68))
+    .extend(i2c.i2c_device_schema(0x68))  # 0x68 par défaut; pourra être 0x69 au YAML
 )
 
 async def to_code(config):
@@ -59,11 +59,11 @@ async def to_code(config):
     await cg.register_component(var, config)
     await i2c.register_i2c_device(var, config)
 
-    cg.add(var.set_address(config["address"]))
+    # Ne PAS gérer l'adresse ici : c'est déjà fait par register_i2c_device
 
-    # Crée et relie les sous-capteurs
     for name in ["accel_x", "accel_y", "accel_z", "gyro_x", "gyro_y", "gyro_z"]:
         if name in config:
             s = await sensor.new_sensor(config[name])
             cg.add(getattr(var, f"set_{name}_sensor")(s))
+
 
