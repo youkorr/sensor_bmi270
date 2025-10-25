@@ -1,5 +1,6 @@
 #include "sensor_bmi270.h"
 #include "esphome/core/log.h"
+#include "esphome/core/helpers.h"  // ✅ pour esphome::delay()
 
 namespace esphome {
 namespace sensor_bmi270 {
@@ -19,15 +20,17 @@ static const uint8_t BMI270_DATA_LEN      = 12;
 void BMI270Sensor::setup() {
   ESP_LOGCONFIG(TAG, "Initialisation du BMI270...");
 
-  // Laisser le capteur s'alimenter
-  delay(5);
+  // Attente d’alimentation stable
+  esphome::delay(5);
 
-  // Soft reset recommandé par Bosch
+  // ✅ Soft reset recommandé par Bosch
   uint8_t cmd = BMI270_CMD_SOFTRESET;
   if (!this->write_register(BMI270_REG_CMD, &cmd, 1)) {
     ESP_LOGW(TAG, "Impossible d'envoyer le soft-reset (CMD 0x%02X)", BMI270_REG_CMD);
   }
-  delay(10);
+
+  // Attendre que le reset soit appliqué
+  esphome::delay(50);
 
   // Lecture Chip-ID
   uint8_t id = 0x00;
@@ -36,6 +39,7 @@ void BMI270Sensor::setup() {
     this->mark_failed();
     return;
   }
+
   ESP_LOGD(TAG, "Chip-ID lu: 0x%02X", id);
 
   if (id != BMI270_CHIP_ID) {
@@ -45,14 +49,14 @@ void BMI270Sensor::setup() {
     return;
   }
 
-  ESP_LOGI(TAG, "BMI270 détecté à l’adresse 0x%02X", this->address_);
+  ESP_LOGI(TAG, "✅ BMI270 détecté à l’adresse 0x%02X", this->address_);
 }
 
 void BMI270Sensor::dump_config() {
   ESP_LOGCONFIG(TAG, "BMI270 Sensor:");
   LOG_I2C_DEVICE(this);
   if (this->is_failed()) {
-    ESP_LOGE(TAG, "Le capteur est en erreur !");
+    ESP_LOGE(TAG, "❌ Le capteur est en erreur !");
   }
 }
 
@@ -62,7 +66,7 @@ void BMI270Sensor::update() {
     return;
   }
 
-  // Échelles approximatives (à ajuster selon config ODR/range si besoin)
+  // ⚙️ Échelles approximatives (à ajuster selon ta config range/ODR)
   constexpr float accel_scale = 9.80665f / 16384.0f;  // ±2g
   constexpr float gyro_scale  = 1.0f / 131.0f;        // ±250°/s
 
