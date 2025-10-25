@@ -1,6 +1,7 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.components import i2c, sensor
+from esphome.const import CONF_UNIT_OF_MEASUREMENT
 from . import BMI270Sensor
 
 DEPENDENCIES = ["i2c"]
@@ -48,6 +49,12 @@ CONFIG_SCHEMA = (
                 state_class="measurement",
                 icon="mdi:rotate-3d-variant",
             ),
+            cv.Optional("temperature"): sensor.sensor_schema(
+                accuracy_decimals=1,
+                state_class="measurement",
+                device_class="temperature",
+                icon="mdi:thermometer",
+            ),
         }
     )
     .extend(cv.COMPONENT_SCHEMA)
@@ -62,8 +69,23 @@ async def to_code(config):
     # Ne PAS gérer l'adresse ici : c'est déjà fait par register_i2c_device
 
     for name in ["accel_x", "accel_y", "accel_z", "gyro_x", "gyro_y", "gyro_z"]:
+    default_units = {
+        "accel_x": "m/s²",
+        "accel_y": "m/s²",
+        "accel_z": "m/s²",
+        "gyro_x": "°/s",
+        "gyro_y": "°/s",
+        "gyro_z": "°/s",
+        "temperature": "°C",
+    }
+
+    for name, default_unit in default_units.items():
         if name in config:
             s = await sensor.new_sensor(config[name])
-            cg.add(getattr(var, f"set_{name}_sensor")(s))
+            channel_conf = dict(config[name])
+            if default_unit and channel_conf.get(CONF_UNIT_OF_MEASUREMENT) is None:
+                channel_conf[CONF_UNIT_OF_MEASUREMENT] = default_unit
 
+            s = await sensor.new_sensor(channel_conf)
+            cg.add(getattr(var, f"set_{name}_sensor")(s))
 
