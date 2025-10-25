@@ -1,6 +1,7 @@
 #include "sensor_bmi270.h"
 #include "esphome/core/log.h"
-#include "esphome/core/helpers.h"  // ✅ pour esphome::delay()
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 
 namespace esphome {
 namespace sensor_bmi270 {
@@ -21,7 +22,7 @@ void BMI270Sensor::setup() {
   ESP_LOGCONFIG(TAG, "Initialisation du BMI270...");
 
   // Attente d’alimentation stable
-  esphome::delay(5);
+  vTaskDelay(pdMS_TO_TICKS(5));
 
   // ✅ Soft reset recommandé par Bosch
   uint8_t cmd = BMI270_CMD_SOFTRESET;
@@ -30,7 +31,7 @@ void BMI270Sensor::setup() {
   }
 
   // Attendre que le reset soit appliqué
-  esphome::delay(50);
+  vTaskDelay(pdMS_TO_TICKS(50));
 
   // Lecture Chip-ID
   uint8_t id = 0x00;
@@ -102,6 +103,7 @@ bool BMI270Sensor::read_raw_data() {
 
 }  // namespace sensor_bmi270
 }  // namespace esphome
+
 
 
 
