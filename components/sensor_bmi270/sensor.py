@@ -19,42 +19,48 @@ CONFIG_SCHEMA = (
                 state_class="measurement",
                 icon="mdi:axis-arrow",
             ),
+            ).extend({cv.Optional("unit_of_measurement_g"): cv.string_strict}),
             cv.Optional("accel_y"): sensor.sensor_schema(
                 unit_of_measurement="m/s²",
                 accuracy_decimals=3,
                 state_class="measurement",
                 icon="mdi:axis-arrow",
             ),
+            ).extend({cv.Optional("unit_of_measurement_g"): cv.string_strict}),
             cv.Optional("accel_z"): sensor.sensor_schema(
                 unit_of_measurement="m/s²",
                 accuracy_decimals=3,
                 state_class="measurement",
                 icon="mdi:axis-arrow",
             ),
+            ).extend({cv.Optional("unit_of_measurement_g"): cv.string_strict}),
             cv.Optional("gyro_x"): sensor.sensor_schema(
                 unit_of_measurement="°/s",
                 accuracy_decimals=2,
                 state_class="measurement",
                 icon="mdi:rotate-3d-variant",
             ),
+            ).extend({cv.Optional("unit_of_measurement_dps"): cv.string_strict}),
             cv.Optional("gyro_y"): sensor.sensor_schema(
                 unit_of_measurement="°/s",
                 accuracy_decimals=2,
                 state_class="measurement",
                 icon="mdi:rotate-3d-variant",
             ),
+            ).extend({cv.Optional("unit_of_measurement_dps"): cv.string_strict}),
             cv.Optional("gyro_z"): sensor.sensor_schema(
                 unit_of_measurement="°/s",
                 accuracy_decimals=2,
                 state_class="measurement",
                 icon="mdi:rotate-3d-variant",
             ),
+            ).extend({cv.Optional("unit_of_measurement_dps"): cv.string_strict}),
             cv.Optional("temperature"): sensor.sensor_schema(
                 accuracy_decimals=1,
                 state_class="measurement",
                 device_class="temperature",
                 icon="mdi:thermometer",
-            ),
+            ).extend({cv.Optional("unit_of_measurement_c"): cv.string_strict}),
         }
     )
     .extend(cv.COMPONENT_SCHEMA)
@@ -79,10 +85,23 @@ async def to_code(config):
         "temperature": "°C",
     }
 
+    unit_aliases = {
+        "accel_x": "unit_of_measurement_g",
+        "accel_y": "unit_of_measurement_g",
+        "accel_z": "unit_of_measurement_g",
+        "gyro_x": "unit_of_measurement_dps",
+        "gyro_y": "unit_of_measurement_dps",
+        "gyro_z": "unit_of_measurement_dps",
+        "temperature": "unit_of_measurement_c",
+    }
+
     for name, default_unit in default_units.items():
         if name in config:
             s = await sensor.new_sensor(config[name])
             channel_conf = dict(config[name])
+            alias_key = unit_aliases.get(name)
+            if alias_key and alias_key in channel_conf:
+                channel_conf[CONF_UNIT_OF_MEASUREMENT] = channel_conf.pop(alias_key)
             if default_unit and channel_conf.get(CONF_UNIT_OF_MEASUREMENT) is None:
                 channel_conf[CONF_UNIT_OF_MEASUREMENT] = default_unit
 
