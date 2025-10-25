@@ -11,7 +11,6 @@ BMI270Sensor = sensor_bmi270_ns.class_(
     "BMI270Sensor", cg.PollingComponent, i2c.I2CDevice
 )
 
-# Définition du schéma YAML
 CONFIG_SCHEMA = (
     cv.Schema(
         {
@@ -19,19 +18,19 @@ CONFIG_SCHEMA = (
             cv.Optional("address", default=0x68): cv.hex_uint8_t,
             cv.Optional("update_interval", default="60s"): cv.update_interval,
             cv.Optional("accel_x"): sensor.sensor_schema(
-                unit_of_measurement="g",
+                unit_of_measurement="m/s²",
                 accuracy_decimals=3,
                 device_class="acceleration",
                 state_class="measurement",
             ),
             cv.Optional("accel_y"): sensor.sensor_schema(
-                unit_of_measurement="g",
+                unit_of_measurement="m/s²",
                 accuracy_decimals=3,
                 device_class="acceleration",
                 state_class="measurement",
             ),
             cv.Optional("accel_z"): sensor.sensor_schema(
-                unit_of_measurement="g",
+                unit_of_measurement="m/s²",
                 accuracy_decimals=3,
                 device_class="acceleration",
                 state_class="measurement",
@@ -69,7 +68,6 @@ async def to_code(config):
     if "address" in config:
         cg.add(var.set_address(config["address"]))
 
-    # Associer les sous-capteurs
     for name in ["accel_x", "accel_y", "accel_z", "gyro_x", "gyro_y", "gyro_z"]:
         if name in config:
             sens = await sensor.new_sensor(config[name])
