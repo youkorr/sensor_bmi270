@@ -4,6 +4,7 @@ from esphome.components import sensor, i2c
 
 DEPENDENCIES = ["i2c"]
 AUTO_LOAD = ["sensor"]
+CODEOWNERS = ["@youkorr"]
 
 sensor_bmi270_ns = cg.esphome_ns.namespace("sensor_bmi270")
 BMI270Sensor = sensor_bmi270_ns.class_(
