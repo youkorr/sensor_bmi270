@@ -1,7 +1,9 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
-from esphome.components import sensor, i2c
+from esphome.components import i2c, sensor
 
+# Nom du namespace identique au dossier : sensor_bmi270
+CODEOWNERS = ["@youkorr"]
 DEPENDENCIES = ["i2c"]
 AUTO_LOAD = ["sensor"]
 
@@ -64,12 +66,13 @@ async def to_code(config):
     await cg.register_component(var, config)
     await i2c.register_i2c_device(var, config)
 
-    if "address" in config:
-        cg.add(var.set_address(config["address"]))
+    cg.add(var.set_address(config["address"]))
 
+    # Crée les sous-capteurs s'ils existent dans la config
     for name in ["accel_x", "accel_y", "accel_z", "gyro_x", "gyro_y", "gyro_z"]:
         if name in config:
             sens = await sensor.new_sensor(config[name])
             cg.add(getattr(var, f"set_{name}_sensor")(sens))
+
 
 
