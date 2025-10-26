@@ -7,6 +7,10 @@ from . import BMI270Sensor
 DEPENDENCIES = ["i2c"]
 AUTO_LOAD = ["sensor"]
 
+_ALIAS_SCHEMA_G = cv.Schema({cv.Optional("unit_of_measurement_g"): cv.string_strict})
+_ALIAS_SCHEMA_DPS = cv.Schema({cv.Optional("unit_of_measurement_dps"): cv.string_strict})
+_ALIAS_SCHEMA_C = cv.Schema({cv.Optional("unit_of_measurement_c"): cv.string_strict})
+
 CONFIG_SCHEMA = (
     cv.Schema(
         {
@@ -19,48 +23,48 @@ CONFIG_SCHEMA = (
                 state_class="measurement",
                 icon="mdi:axis-arrow",
             ),
-            ).extend({cv.Optional("unit_of_measurement_g"): cv.string_strict}),
+            ).extend(_ALIAS_SCHEMA_G),
             cv.Optional("accel_y"): sensor.sensor_schema(
                 unit_of_measurement="m/s²",
                 accuracy_decimals=3,
                 state_class="measurement",
                 icon="mdi:axis-arrow",
             ),
-            ).extend({cv.Optional("unit_of_measurement_g"): cv.string_strict}),
+            ).extend(_ALIAS_SCHEMA_G),
             cv.Optional("accel_z"): sensor.sensor_schema(
                 unit_of_measurement="m/s²",
                 accuracy_decimals=3,
                 state_class="measurement",
                 icon="mdi:axis-arrow",
             ),
-            ).extend({cv.Optional("unit_of_measurement_g"): cv.string_strict}),
+            ).extend(_ALIAS_SCHEMA_G),
             cv.Optional("gyro_x"): sensor.sensor_schema(
                 unit_of_measurement="°/s",
                 accuracy_decimals=2,
                 state_class="measurement",
                 icon="mdi:rotate-3d-variant",
             ),
-            ).extend({cv.Optional("unit_of_measurement_dps"): cv.string_strict}),
+            ).extend(_ALIAS_SCHEMA_DPS),
             cv.Optional("gyro_y"): sensor.sensor_schema(
                 unit_of_measurement="°/s",
                 accuracy_decimals=2,
                 state_class="measurement",
                 icon="mdi:rotate-3d-variant",
             ),
-            ).extend({cv.Optional("unit_of_measurement_dps"): cv.string_strict}),
+            ).extend(_ALIAS_SCHEMA_DPS),
             cv.Optional("gyro_z"): sensor.sensor_schema(
                 unit_of_measurement="°/s",
                 accuracy_decimals=2,
                 state_class="measurement",
                 icon="mdi:rotate-3d-variant",
             ),
-            ).extend({cv.Optional("unit_of_measurement_dps"): cv.string_strict}),
+            ).extend(_ALIAS_SCHEMA_DPS),
             cv.Optional("temperature"): sensor.sensor_schema(
                 accuracy_decimals=1,
                 state_class="measurement",
                 device_class="temperature",
                 icon="mdi:thermometer",
-            ).extend({cv.Optional("unit_of_measurement_c"): cv.string_strict}),
+            ).extend(_ALIAS_SCHEMA_C),
         }
     )
     .extend(cv.COMPONENT_SCHEMA)
